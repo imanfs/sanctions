@@ -3,15 +3,14 @@ import regex as re
 from datetime import datetime
 import numpy as np
 
-def clean_name(name_series):
-    name_series = name_series.fillna('')
+def clean_name(name):
     
-    name_series = name_series.str.lower()
-    name_series = name_series.str.strip()
-    name_series = name_series.str.replace(r'\s+', ' ', regex=True)
-    name_series = name_series.str.replace(r'[^\w\s]', '', regex=True) # special chars
+    name = name.title()
+    name = name.strip()
+    name = re.sub(r'\s+', ' ', name)
+    name = re.sub(r'[^\w\s]', '', name) # special chars
     
-    return name_series
+    return name
 
 def create_full_name(row):
     names = []
@@ -99,43 +98,3 @@ def standardize_date(date_str):
             return date_str  # Return as is if no pattern matched
         except:
             return date_str
-
-def identify_duplicates(df):
-    # Find exact duplicates
-    exact_duplicates = df[df.duplicated(keep=False)]
-    
-    # Find potential duplicates based on name and DOB
-    potential_duplicates = df[df.duplicated(subset=['Full_Name', 'DOB'], keep=False)]
-    
-    return {
-        'exact_duplicates': exact_duplicates,
-        'potential_duplicates': potential_duplicates
-    }
-
-def assess_data_quality(df):
-    # missing values
-    missing_values = df.isnull().sum()
-    
-    # inconsistent date formats
-    date_format_issues = 0
-    if 'DOB' in df.columns:
-        date_format_issues = df['DOB'].apply(
-            lambda x: not bool(re.match(r'^\d{4}-\d{2}-\d{2}$', str(x))) if pd.notna(x) else False
-        ).sum()
-    
-    # inconsistent name formats
-    name_format_issues = df['Full_Name'].apply(lambda x: len(x) < 2 if pd.notna(x) else False).sum()
-    
-    missing_primary_identifiers = df.apply(
-        lambda row: pd.isna(row['Full_Name']) and 
-                    (pd.isna(row.get('Passport Number', np.nan)) and 
-                     pd.isna(row.get('National Identification Number', np.nan))),
-        axis=1
-    ).sum()
-    
-    return {
-        'missing_values': missing_values,
-        'date_format_issues': date_format_issues,
-        'name_format_issues': name_format_issues,
-        'missing_primary_identifiers': missing_primary_identifiers
-    }
