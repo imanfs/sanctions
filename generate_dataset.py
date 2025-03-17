@@ -62,11 +62,9 @@ if __name__ == "__main__":
     processed_sanctions_data = process_sanctions_data(sanctions_data)
     summary = generate_summary(sanctions_data)
     final_dataset = create_final_dataset(processed_sanctions_data)
-    print("Dataset generation completed successfully!")
-    # Save the final dataset to a CSV file
     final_dataset.to_csv(args.output_dataset, index=False)
+    print("Dataset generation completed successfully!")
 
-    # Save the data quality assessment to a CSV file
     pd.DataFrame([summary]).to_csv(args.output_summary, index=False)
     print("Data quality summary saved successfully!")
     
