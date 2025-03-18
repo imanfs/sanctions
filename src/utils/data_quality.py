@@ -1,20 +1,21 @@
 import pandas as pd
 import regex as re
-import numpy as np
 
 def identify_duplicates(df):
     # Find exact duplicates
     exact_duplicates = df[df.duplicated(keep=False)]
     
     # Find potential duplicates based on name and DOB
-    potential_duplicates = df[df.duplicated(subset=['Global ID'], keep=False)]
+    group_id_duplicates = df[df.duplicated(subset=['Group ID'], keep=False)]['Group ID'].unique()
+    group_id_duplicate_rows = df[df.duplicated(subset=['Group ID'], keep=False)]
     
     return {
         'exact_duplicates': exact_duplicates,
-        'global_id_duplicates': potential_duplicates
+        'group_id_duplicates': group_id_duplicates,
+        'group_id_duplicate_rows': group_id_duplicate_rows
     }
 
-def assess_data_quality(df):
+def assess_data_quality(df,grouped_df):
     # missing values
     missing_values = df.isnull().sum()
     
@@ -26,18 +27,19 @@ def assess_data_quality(df):
         ).sum()
     
     # inconsistent name formats
-    name_format_issues = df['Full_Name'].apply(lambda x: len(x) < 2 if pd.notna(x) else False).sum()
-    
-    missing_primary_identifiers = df.apply(
-        lambda row: pd.isna(row['Full_Name']) and 
-                    (pd.isna(row.get('Passport Number', np.nan)) and 
-                     pd.isna(row.get('National Identification Number', np.nan))),
-        axis=1
-    ).sum()
-    
+    n_name_variations = 0
+    mean_name_variations = 0
+    if 'Name Variations' in grouped_df.columns:
+        n_name_variations = grouped_df['Name Variations'].apply(
+            lambda x: len(x) if isinstance(x, list) else 0
+        ).sum()
+        mean_name_variations = grouped_df['Name Variations'].apply(
+            lambda x: len(x) if isinstance(x, list) else 0
+        ).sum() / len(grouped_df)
+        
     return {
-        'missing_values': missing_values,
-        'date_format_issues': date_format_issues,
-        'name_format_issues': name_format_issues,
-        'missing_primary_identifiers': missing_primary_identifiers
+        'missing_values': missing_values.to_dict(),
+        'date_format_issues': int(date_format_issues),
+        'n_name_variations': int(n_name_variations),
+        'mean_name_variations': mean_name_variations
     }
