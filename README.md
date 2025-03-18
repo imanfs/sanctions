@@ -10,7 +10,7 @@ This project provides a comprehensive data processing pipeline for financial san
 
 ```python
 # Process sanctions data
-python generate_dataset.py --input data/ConList.csv --output_dataset data/outputs/final_sanctions_dataset.csv --output_summary data/outputs/data_quality_assessment.json
+python src/main.py --input data/ConList.csv --output_dataset data/outputs/sanctions_dataset.csv --output_summary data/outputs/data_quality_assessment.json
 ```
 
 ## Dataset Structure
